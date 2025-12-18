@@ -1,4 +1,4 @@
-require('dotenv').config({ path: './info.env' });
+//require('dotenv').config({ path: './info.env' });
 const fs = require('fs');
 const { 
     Client, 
@@ -17,6 +17,10 @@ const BROADCASTER_TOKEN = process.env.BROADCASTER_TOKEN; // usato solo per info 
 const TWITCH_CHANNEL_NAME = process.env.TWITCH_CHANNEL_NAME;
 const ROLE_NAME = process.env.ROLE_NAME || "Minecrafter";
 const USER_TOKENS_FILE = './user_tokens.json';
+
+if (!DISCORD_TOKEN) {
+    throw new Error("DISCORD_TOKEN non presente nelle env!");
+}
 
 // Carica token utenti salvati
 let userTokens = {};
