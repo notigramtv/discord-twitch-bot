@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = 'https://squishiest-mellisa-magnetohydrodynamic.ngrok-free.dev/auth/callback';
+const REDIRECT_URI = 'https://discord-twitch-bot-production-490f.up.railway.app/auth/callback';
 const USER_TOKENS_FILE = './user_tokens.json';
 
 // Carica token esistenti
