@@ -1,4 +1,9 @@
 //require('dotenv').config({ path: './info.env' });
+
+//NUOVA VARIABILE
+const cron = require('node-cron');
+//--------
+
 const fs = require('fs');
 const { 
     Client, 
@@ -17,6 +22,11 @@ const BROADCASTER_TOKEN = process.env.BROADCASTER_TOKEN; // usato solo per info 
 const TWITCH_CHANNEL_NAME = process.env.TWITCH_CHANNEL_NAME;
 const ROLE_NAME = process.env.ROLE_NAME || "Minecrafter";
 const USER_TOKENS_FILE = './user_tokens.json';
+
+//NUOVE VARIABILI
+const GUILD_ID = process.env.DISCORD_GUILD_ID;
+const MINECRAFTER_ROLE_NAME = 'Minecrafter';
+//--------
 
 if (!DISCORD_TOKEN) {
     throw new Error("DISCORD_TOKEN non presente nelle env!");
@@ -90,6 +100,64 @@ async function isFollower(twitchUserId, userToken) {
     const data = await res.json();
     return data.data && data.data.length > 0; // true se segue
 }
+
+async function monthlyFollowerCheck() {
+  console.log('🔁 Avvio controllo mensile follower Twitch...');
+
+  const guild = await client.guilds.fetch(GUILD_ID);
+  await guild.members.fetch();
+
+  const role = guild.roles.cache.find(r => r.name === MINECRAFTER_ROLE_NAME);
+  if (!role) {
+    console.error('❌ Ruolo Minecrafter non trovato');
+    return;
+  }
+
+  const userTokens = fs.existsSync(USER_TOKENS_FILE)
+    ? JSON.parse(fs.readFileSync(USER_TOKENS_FILE, 'utf8'))
+    : {};
+
+  for (const member of role.members.values()) {
+    const discordId = member.id;
+    const token = userTokens[discordId];
+
+    try {
+      if (!token) {
+        await member.roles.remove(role);
+        console.log(`❌ Token mancante → ruolo rimosso a ${member.user.tag}`);
+        continue;
+      }
+
+      const twitchUserId = await getTwitchUserId(token);
+      const follower = await isFollower(twitchUserId);
+
+      if (!follower) {
+        await member.roles.remove(role);
+        console.log(`❌ Non più follower → ruolo rimosso a ${member.user.tag}`);
+
+        // DM opzionale
+        try {
+          await member.send(
+            '⚠️ Non segui più il canale Twitch **notigram**.\n' +
+            'Il ruolo **Minecrafter** ti è stato rimosso.\n' +
+            'Segui di nuovo il canale e usa **!follower**.'
+          );
+        } catch {}
+      } else {
+        console.log(`✅ ${member.user.tag} è ancora follower`);
+      }
+    } catch (err) {
+      console.error(`Errore controllo ${member.user.tag}`, err);
+    }
+  }
+
+  console.log('✅ Controllo mensile completato');
+}
+
+cron.schedule('0 3 1 * *', () => {
+  monthlyFollowerCheck();
+});
+
 
 // Comandi Discord
 client.on('messageCreate', async (message) => {
@@ -178,6 +246,8 @@ client.once('ready', async () => {
     console.log(`Bot pronto: ${client.user.tag}`);
     try {
         await initBroadcasterId();
+          // 🔧 TEST MANUALE (rimuovi dopo)
+        await monthlyFollowerCheck();
     } catch (err) {
         console.error(`Errore inizializzazione Twitch: ${err.message}`);
     }
