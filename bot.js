@@ -166,7 +166,7 @@ async function monthlyFollowerCheck() {
       const appToken = await getAppAccessToken();
       const follower = await isFollower(twitchUserId, broadcasterId, appToken);
       //------
-      
+
     //VARIABILE FUNZIONANTE
       //const follower = await isFollower(twitchUserId);
     //-----
@@ -286,8 +286,8 @@ client.once('ready', async () => {
     console.log(`Bot pronto: ${client.user.tag}`);
     try {
         await initBroadcasterId();
-          // 🔧 TEST MANUALE (rimuovi dopo)
-        await monthlyFollowerCheck();
+        // 🔧 TEST MANUALE (rimuovi dopo)
+        //await monthlyFollowerCheck();
     } catch (err) {
         console.error(`Errore inizializzazione Twitch: ${err.message}`);
     }
