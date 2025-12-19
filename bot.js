@@ -26,6 +26,7 @@ const USER_TOKENS_FILE = './user_tokens.json';
 //NUOVE VARIABILI
 const GUILD_ID = process.env.DISCORD_GUILD_ID;
 const MINECRAFTER_ROLE_NAME = 'Minecrafter';
+const LOG_CHANNEL_ID = '1451568585129328691';
 //--------
 
 //NUOVE FUNZIONI
@@ -146,6 +147,13 @@ async function monthlyFollowerCheck() {
     return;
   }
 
+  const logChannel = await guild.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
+
+if (!logChannel) {
+  console.error('❌ Canale log non trovato');
+}
+
+
   const userTokens = fs.existsSync(USER_TOKENS_FILE)
     ? JSON.parse(fs.readFileSync(USER_TOKENS_FILE, 'utf8'))
     : {};
@@ -158,6 +166,15 @@ async function monthlyFollowerCheck() {
       if (!token) {
         await member.roles.remove(role);
         console.log(`❌ Token mancante → ruolo rimosso a ${member.user.tag}`);
+
+        if (logChannel) {
+  await logChannel.send(
+    `❌ **Ruolo Minecrafter rimosso**\n` +
+    `👤 Utente: **${member.user.tag}**\n` +
+    `📺 Motivo: non segue più il canale Twitch **notigram**`
+  );
+}
+
         continue;
       }
 
