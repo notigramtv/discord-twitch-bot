@@ -172,7 +172,7 @@ if (!logChannel) {
     `❌ **Ruolo Minecrafter rimosso**\n` +
     `👤 Utente: **${member.user.tag}**\n` +
     `📺 Motivo: non segue più il canale Twitch **notigram**` +
-    ''
+    `-------------------------`
   );
 }
 
