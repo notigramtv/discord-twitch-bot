@@ -202,6 +202,25 @@ app.get('/auth', (req, res) => {
   res.redirect(url);
 });
 
+async function getTwitchUserId(accessToken) {
+  const res = await fetch('https://api.twitch.tv/helix/users', {
+    headers: {
+      'Client-ID': process.env.CLIENT_ID,
+      'Authorization': `Bearer ${accessToken}`
+    }
+  });
+
+  const data = await res.json();
+
+  if (!data.data || !data.data.length) {
+    throw new Error('Token non valido');
+  }
+
+  return data.data[0].id;
+}
+
+
+
 /* ---------------- CALLBACK ---------------- */
 
 app.get('/auth/callback', async (req, res) => {
