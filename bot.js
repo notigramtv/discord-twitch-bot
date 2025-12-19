@@ -135,7 +135,7 @@ if (command === '!link') {
         console.error(err);
         await message.reply(
             `❌ ${message.author}, non posso inviarti messaggi privati.\n` +
-            `Abilita i DM dal server e riprova.`
+            `Prova ad abilitare i DM dal server e riprova.`
         );
     }
 }
