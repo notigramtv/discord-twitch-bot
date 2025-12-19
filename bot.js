@@ -101,7 +101,7 @@ client.on('messageCreate', async (message) => {
     // Comando !link
 // Comando !link
 if (command === '!link') {
-    const oauthUrl = `https://squishiest-mellisa-magnetohydrodynamic.ngrok-free.dev/auth?discord_id=${message.author.id}`;
+    const oauthUrl = `https://discord-twitch-bot-production-490f.up.railway.app/auth?discord_id=${message.author.id}`;
 
     const embed = new EmbedBuilder()
         .setTitle('🎮 Collega il tuo account Twitch')
