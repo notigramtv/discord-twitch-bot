@@ -28,6 +28,39 @@ const GUILD_ID = process.env.DISCORD_GUILD_ID;
 const MINECRAFTER_ROLE_NAME = 'Minecrafter';
 //--------
 
+//NUOVE FUNZIONI
+let appAccessToken = null;
+let appTokenExpiresAt = 0;
+
+async function getAppAccessToken() {
+  const now = Date.now();
+
+  // Se il token è ancora valido, riusalo
+  if (appAccessToken && now < appTokenExpiresAt) {
+    return appAccessToken;
+  }
+
+  const res = await fetch(
+    `https://id.twitch.tv/oauth2/token` +
+    `?client_id=${CLIENT_ID}` +
+    `&client_secret=${CLIENT_SECRET}` +
+    `&grant_type=client_credentials`,
+    { method: 'POST' }
+  );
+
+  const data = await res.json();
+
+  if (!data.access_token) {
+    throw new Error('Impossibile ottenere App Access Token Twitch');
+  }
+
+  appAccessToken = data.access_token;
+  appTokenExpiresAt = now + (data.expires_in * 1000) - 60_000; // margine 1 min
+
+  return appAccessToken;
+}
+//--------
+
 if (!DISCORD_TOKEN) {
     throw new Error("DISCORD_TOKEN non presente nelle env!");
 }
@@ -129,7 +162,14 @@ async function monthlyFollowerCheck() {
       }
 
       const twitchUserId = await getTwitchUserId(token);
-      const follower = await isFollower(twitchUserId);
+      //NUOVE VARIABILI
+      const appToken = await getAppAccessToken();
+      const follower = await isFollower(twitchUserId, broadcasterId, appToken);
+      //------
+      
+    //VARIABILE FUNZIONANTE
+      //const follower = await isFollower(twitchUserId);
+    //-----
 
       if (!follower) {
         await member.roles.remove(role);
