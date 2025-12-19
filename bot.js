@@ -305,7 +305,7 @@ client.once('ready', async () => {
     try {
         await initBroadcasterId();
         // 🔧 TEST MANUALE (rimuovi dopo)
-        await monthlyFollowerCheck();
+        //await monthlyFollowerCheck();
     } catch (err) {
         console.error(`Errore inizializzazione Twitch: ${err.message}`);
     }
