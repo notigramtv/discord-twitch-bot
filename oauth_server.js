@@ -155,7 +155,8 @@ img.logo { width:60px; margin-bottom:15px; }
 <img class="logo" src="https://cdn.brandfetch.io/idIwZCwD2f/theme/dark/symbol.svg?c=1bxid64Mup7aczewSAYMX&t=1668070397594" alt="Twitch Logo">
 <h1>✅ Autorizzazione completata!</h1>
 <p>Il tuo account Twitch è stato collegato con successo.</p>
-<p>Ora torna su Discord e scrivi <strong>!follower</strong> nel canale <em>richiesta autorizzazione</em> per ottenere il ruolo.</p>
+<p>Il ruolo <strong>Minecrafter</strong> ti è stato assegnato sul Discord di <strong>NotiGram</strong>.</p>
+<p>Ora puoi chiudere questa finestra e leggere le istruzioni per accedere al server minecraft in <strong>Informazioni utili</strong> su Discord.</p>
 <button onclick="window.close()">Chiudi</button>
 </div>
 </body>
