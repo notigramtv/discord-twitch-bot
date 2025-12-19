@@ -157,7 +157,6 @@ img.logo { width:60px; margin-bottom:15px; }
 <p>Il tuo account Twitch è stato collegato con successo.</p>
 <p>Il ruolo <strong>Minecrafter</strong> ti è stato assegnato sul Discord di <strong>NotiGram</strong>.</p>
 <p>Ora puoi chiudere questa finestra e leggere le istruzioni per accedere al server minecraft in <strong>Informazioni utili</strong> su Discord.</p>
-<button onclick="window.close()">Chiudi</button>
 </div>
 </body>
 </html>
