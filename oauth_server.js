@@ -240,7 +240,7 @@ app.get('/auth/callback', async (req, res) => {
 
       await member.send(
         `✅ **Verifica completata!**\n` +
-        `Segui il canale Twitch e ti è stato assegnato il ruolo **${ROLE_NAME}** 🎉`
+        `Ti è stato assegnato il ruolo **${ROLE_NAME}** 🎉`
       );
     } else {
       await member.send(
@@ -256,9 +256,13 @@ app.get('/auth/callback', async (req, res) => {
       <button onclick="window.close()">Chiudi</button>
     `);
   } catch (err) {
-    console.error(err);
-    res.send('Errore durante la verifica.');
-  }
+  console.error('ERRORE CALLBACK OAUTH:', err?.response?.data || err);
+  res.status(500).send(`
+    <h1>Errore durante la verifica</h1>
+    <pre>${JSON.stringify(err?.response?.data || err, null, 2)}</pre>
+  `);
+}
+
 });
 
 /* ---------------- START ---------------- */
