@@ -311,4 +311,6 @@ client.once('ready', async () => {
     }
 });
 
+module.exports = { client, GUILD_ID, ROLE_NAME, isFollower, getTwitchUserId };
+
 client.login(DISCORD_TOKEN);

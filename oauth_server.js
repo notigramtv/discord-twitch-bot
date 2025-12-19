@@ -1,3 +1,5 @@
+const { client, GUILD_ID, ROLE_NAME, isFollower, getTwitchUserId } = require('./bot');
+
 //require('dotenv').config({ path: './info.env' });
 const express = require('express');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
@@ -108,6 +110,28 @@ app.get('/auth/callback', async (req, res) => {
         // Salva token utente associato al Discord ID
         userTokens[state] = tokenData.access_token;
         fs.writeFileSync(USER_TOKENS_FILE, JSON.stringify(userTokens, null, 2));
+
+// Controllo follower automatico
+try {
+    const guild = await client.guilds.fetch(GUILD_ID);
+    await guild.members.fetch();
+    const member = await guild.members.fetch(state);
+
+    const twitchUserId = await getTwitchUserId(tokenData.access_token);
+    const follower = await isFollower(twitchUserId, tokenData.access_token);
+
+    const role = guild.roles.cache.find(r => r.name === ROLE_NAME);
+
+    if (follower && role && !member.roles.cache.has(role.id)) {
+        await member.roles.add(role);
+        await member.send(`✅ Sei follower del canale Twitch e ti è stato assegnato il ruolo **${ROLE_NAME}**!`);
+    } else if (!follower) {
+        await member.send(`❌ Non segui ancora il canale Twitch. Seguilo e poi usa il comando **!follower** se necessario.`);
+    }
+} catch (err) {
+    console.error(`Errore controllo follower automatico per ${state}`, err);
+}
+
 
         // Pagina di conferma
         res.send(`
