@@ -7,7 +7,6 @@ const { client } = require('./bot');
 const WHITELIST_CHANNEL_ID = '1450532753115320501';
 const OUTPUT_CHANNEL_ID = '1454127695192653845';
 
-// Funzione per ottenere UUID da mcprofile.io
 async function getMinecraftUUID(username, type) {
   try {
     const res = await fetch(`https://api.mcprofile.io/${encodeURIComponent(username)}/${encodeURIComponent(type.toLowerCase())}/json`);
@@ -20,62 +19,45 @@ async function getMinecraftUUID(username, type) {
   }
 }
 
-// Funzione per registrare il listener
-function registerWhitelistListener() {
-  console.log('✅ Minecraft Whitelist Plugin: registrazione listener');
+// **Listener registrato subito**
+client.on('messageCreate', async (message) => {
+  try {
+    // Ignora bot
+    if (message.author.bot) return;
 
-  client.on('messageCreate', async (message) => {
-    try {
-      console.log('📩 Messaggio intercettato');
+    // Solo canale whitelist
+    if (message.channel.id !== WHITELIST_CHANNEL_ID) return;
 
-      // Ignora bot
-      if (message.author.bot) return;
+    console.log(`📩 Messaggio intercettato: ${message.content}`);
 
-      // Solo messaggi nel canale whitelist
-      if (message.channel.id !== WHITELIST_CHANNEL_ID) return;
+    // Estrazione case-insensitive
+    const minecraftMatch = message.content.match(/minecraft:\s*(.+)/i);
+    const tipoMatch = message.content.match(/tipo:\s*(.+)/i);
 
-      const content = message.content;
-
-      // Estrazione case-insensitive dei dati
-      const minecraftMatch = content.match(/minecraft:\s*(.+)/i);
-      const tipoMatch = content.match(/tipo:\s*(.+)/i);
-
-      if (!minecraftMatch || !tipoMatch) {
-        console.log(`⚠️ Messaggio non valido da ${message.author.tag}`);
-        return;
-      }
-
-      const minecraftName = minecraftMatch[1].trim();
-      const tipo = tipoMatch[1].trim();
-
-      // Ottieni UUID
-      const uuid = await getMinecraftUUID(minecraftName, tipo);
-
-      if (!uuid) {
-        await message.reply(`❌ Impossibile ottenere UUID per ${minecraftName} (Tipo: ${tipo})`);
-        return;
-      }
-
-      // Scrive nel canale output
-      const outputChannel = await client.channels.fetch(OUTPUT_CHANNEL_ID);
-      await outputChannel.send(
-        `Minecraft: ${minecraftName}\nUUID: ${uuid}\nTipo: ${tipo}`
-      );
-
-      console.log(`📤 UUID inviato per ${minecraftName}: ${uuid}`);
-
-    } catch (err) {
-      console.error('Errore nel plugin Minecraft Whitelist:', err);
+    if (!minecraftMatch || !tipoMatch) {
+      console.log(`⚠️ Messaggio non valido da ${message.author.tag}`);
+      return;
     }
-  });
-}
 
-// Se il client è già pronto, registra subito
-if (client.isReady()) {
-  registerWhitelistListener();
-} else {
-  // Altrimenti aspetta il ready
-  client.once('ready', registerWhitelistListener);
-}
+    const minecraftName = minecraftMatch[1].trim();
+    const tipo = tipoMatch[1].trim();
+
+    const uuid = await getMinecraftUUID(minecraftName, tipo);
+    if (!uuid) {
+      await message.reply(`❌ Impossibile ottenere UUID per ${minecraftName} (Tipo: ${tipo})`);
+      return;
+    }
+
+    const outputChannel = await client.channels.fetch(OUTPUT_CHANNEL_ID);
+    await outputChannel.send(
+      `Minecraft: ${minecraftName}\nUUID: ${uuid}\nTipo: ${tipo}`
+    );
+
+    console.log(`📤 UUID inviato per ${minecraftName}: ${uuid}`);
+
+  } catch (err) {
+    console.error('Errore nel plugin Minecraft Whitelist:', err);
+  }
+});
 
 console.log('✅ Minecraft Whitelist Plugin attivo');
