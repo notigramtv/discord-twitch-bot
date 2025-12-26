@@ -11,8 +11,7 @@ const {
     EmbedBuilder, 
     ActionRowBuilder, 
     ButtonBuilder, 
-    ButtonStyle,
-    Partials 
+    ButtonStyle
 } = require('discord.js');
 
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
@@ -80,8 +79,7 @@ const client = new Client({
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
-    ],
-    partials: [Partials.Channel]
+    ]
 });
 
 let broadcasterId = null;
