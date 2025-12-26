@@ -1,7 +1,6 @@
 console.log('✅ Minecraft Whitelist Plugin caricato');
 
-const fetch = (...args) =>
-  import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const { client } = require('./bot');
 
 // CONFIG
@@ -11,19 +10,33 @@ const OUTPUT_CHANNEL_ID = '1454127695192653845';
 // Funzione per ottenere UUID da mcprofile.io
 async function getMinecraftUUID(username, type) {
   try {
-    const res = await fetch(
-      `https://api.mcprofile.io/${encodeURIComponent(username)}/${encodeURIComponent(type.toLowerCase())}/json`
-    );
+    const lowerType = type.toLowerCase();
+    let url;
+
+    if (lowerType === 'java') {
+      url = `https://mcprofile.io/api/v1/java/username/${encodeURIComponent(username)}`;
+    } else if (lowerType === 'bedrock') {
+      url = `https://mcprofile.io/api/v1/bedrock/gamertag/${encodeURIComponent(username)}`;
+    } else {
+      console.warn(`Tipo sconosciuto: ${type}`);
+      return null;
+    }
+
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`Errore API: ${res.status}`);
     const data = await res.json();
-    return data?.uuid || null;
+
+    if (lowerType === 'java') return data?.uuid || null;
+    if (lowerType === 'bedrock') return data?.id || null;
+
+    return null;
   } catch (err) {
     console.error('⚠️ Errore fetch UUID:', err);
     return null;
   }
 }
 
-// Listener globale per tutti i messaggi
+// Listener sul canale whitelist
 client.on('messageCreate', async (message) => {
   try {
     // Ignora bot
@@ -32,12 +45,13 @@ client.on('messageCreate', async (message) => {
     // Solo messaggi nel canale whitelist
     if (message.channel.id !== WHITELIST_CHANNEL_ID) return;
 
-    console.log(`📩 Messaggio intercettato: ${message.content}`);
+    console.log('📩 Messaggio intercettato:', message.content);
+
+    const content = message.content;
 
     // Estrazione case-insensitive dei dati
-    const twitchMatch = message.content.match(/twitch:\s*(.+)/i);
-    const minecraftMatch = message.content.match(/minecraft:\s*(.+)/i);
-    const tipoMatch = message.content.match(/tipo:\s*(.+)/i);
+    const minecraftMatch = content.match(/minecraft:\s*(.+)/i);
+    const tipoMatch = content.match(/tipo:\s*(.+)/i);
 
     if (!minecraftMatch || !tipoMatch) {
       console.log(`⚠️ Messaggio non valido da ${message.author.tag}`);
@@ -49,24 +63,24 @@ client.on('messageCreate', async (message) => {
 
     console.log(`✅ Username Minecraft: ${minecraftName}, Tipo: ${tipo}`);
 
-    // Ottieni UUID (con fallback se API non raggiungibile)
-    let uuid = await getMinecraftUUID(minecraftName, tipo);
-    if (!uuid) uuid = 'NON DISPONIBILE';
+    // Ottieni UUID
+    const uuid = await getMinecraftUUID(minecraftName, tipo);
 
-    // Invia nel canale output
-    const outputChannel = await client.channels.fetch(OUTPUT_CHANNEL_ID).catch(() => null);
-    if (!outputChannel) {
-      console.error(`❌ Canale output ${OUTPUT_CHANNEL_ID} non trovato`);
+    if (!uuid) {
+      await message.reply(`❌ Impossibile ottenere UUID per ${minecraftName} (Tipo: ${tipo})`);
+      console.log(`⚠️ UUID non disponibile per ${minecraftName}`);
       return;
     }
 
+    // Scrive nel canale output
+    const outputChannel = await client.channels.fetch(OUTPUT_CHANNEL_ID);
     await outputChannel.send(
       `Minecraft: ${minecraftName}\nUUID: ${uuid}\nTipo: ${tipo}`
     );
 
     console.log(`📤 UUID inviato per ${minecraftName}: ${uuid}`);
   } catch (err) {
-    console.error('❌ Errore nel plugin Minecraft Whitelist:', err);
+    console.error('Errore nel plugin Minecraft Whitelist:', err);
   }
 });
 
