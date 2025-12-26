@@ -50,8 +50,8 @@ client.on('messageCreate', async (message) => {
     const content = message.content;
 
     // Estrazione case-insensitive dei dati
-    const minecraftMatch = content.match(/minecraft:\s*(.+)/i);
-    const tipoMatch = content.match(/tipo:\s*(.+)/i);
+    const minecraftMatch = content.match(/minecraft\s*:\s*(.+)/i);
+    const tipoMatch = content.match(/tipo\s*:\s*(.+)/i);
 
     if (!minecraftMatch || !tipoMatch) {
       console.log(`⚠️ Messaggio non valido da ${message.author.tag}`);
