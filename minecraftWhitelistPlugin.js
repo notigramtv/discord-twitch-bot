@@ -10,31 +10,25 @@ const OUTPUT_CHANNEL_ID = '1454127695192653845';
 // Funzione per ottenere UUID da mcprofile.io
 async function getMinecraftUUID(username, type) {
   try {
-    const lowerType = type.toLowerCase();
     let url;
-
-    if (lowerType === 'java') {
-      url = `https://mcprofile.io/api/v1/java/username/${encodeURIComponent(username)}`;
-    } else if (lowerType === 'bedrock') {
-      url = `https://mcprofile.io/api/v1/bedrock/gamertag/${encodeURIComponent(username)}`;
+    if (type.toLowerCase() === 'java') {
+      url = `https://api.mcprofile.io/api/v1/java/username/${encodeURIComponent(username)}`;
     } else {
-      console.warn(`Tipo sconosciuto: ${type}`);
-      return null;
+      url = `https://api.mcprofile.io/api/v1/bedrock/gamertag/${encodeURIComponent(username)}`;
     }
 
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Errore API: ${res.status}`);
     const data = await res.json();
 
-    if (lowerType === 'java') return data?.uuid || null;
-    if (lowerType === 'bedrock') return data?.id || null;
-
-    return null;
+    // Estrai l'UUID correttamente secondo tipo
+    return type.toLowerCase() === 'java' ? data?.uuid : data?.uuid;
   } catch (err) {
     console.error('⚠️ Errore fetch UUID:', err);
     return null;
   }
 }
+
 
 // Listener sul canale whitelist
 client.on('messageCreate', async (message) => {
