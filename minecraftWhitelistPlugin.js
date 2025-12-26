@@ -1,3 +1,5 @@
+console.log('✅ Minecraft Whitelist Plugin caricato');
+
 const { EmbedBuilder } = require('discord.js');
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
