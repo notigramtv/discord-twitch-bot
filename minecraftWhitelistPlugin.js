@@ -42,6 +42,8 @@ client.on('messageCreate', async (message) => {
     const data = await res.json();
     if (!data || !data.uuid) throw new Error('UUID non trovato');
 
+    console.log('📤 Invio embed nel canale output');
+
     const embed = new EmbedBuilder()
       .setTitle('🧱 Minecraft Whitelist')
       .setColor(type === 'java' ? 0x00ff9c : 0x3498db)
