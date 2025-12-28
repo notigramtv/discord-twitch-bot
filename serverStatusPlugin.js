@@ -18,7 +18,7 @@ async function fetchServerStatus() {
   console.log('🧪 [3] PORT:', SERVER_PORT);
 
   try {
-    const result = await status(SERVER_IP, { port: SERVER_PORT, timeout: 3000 });
+    const result = await status(SERVER_IP, SERVER_PORT, {timeout: 3000 });
     console.log('🟢 [4] Server raggiungibile:', result);
 
     return {
