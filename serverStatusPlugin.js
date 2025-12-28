@@ -12,6 +12,84 @@ const SERVER_TYPE = (process.env.MC_SERVER_TYPE || 'java').toLowerCase();
 
 const COMMAND = '!server'; // puoi cambiarlo quando vuoi
 
+let lastServerOnline = false;
+const STATUS_CHANNEL_ID = process.env.SERVER_STATUS_CHANNEL_ID;
+
+async function checkServerStatus() {
+  try {
+    let result;
+
+    if (SERVER_TYPE === 'java') {
+      result = await statusJava(SERVER_IP, SERVER_PORT, { timeout: 3000 });
+    } else {
+      result = await statusBedrock(SERVER_IP, SERVER_PORT, { timeout: 3000 });
+    }
+
+    // 🔄 OFFLINE → ONLINE
+    if (!lastServerOnline) {
+      console.log('🟢 Server appena andato ONLINE');
+
+      const channel = await client.channels.fetch(STATUS_CHANNEL_ID);
+
+      await channel.send({
+        embeds: [
+          {
+            color: 0x57F287,
+            title: '🟢 Server ONLINE',
+            description: 'Il server Minecraft è ora **disponibile**.',
+            fields: [
+              { name: 'IP', value: SERVER_IP, inline: true },
+              { name: 'Porta', value: String(SERVER_PORT), inline: true },
+              { name: 'Tipo', value: SERVER_TYPE.toUpperCase(), inline: true },
+              {
+                name: 'Giocatori',
+                value: SERVER_TYPE === 'java'
+                  ? `${result.players.online} / ${result.players.max}`
+                  : `${result.playersOnline} / ${result.playersMax}`,
+                inline: false
+              }
+            ],
+            timestamp: new Date()
+          }
+        ]
+      });
+    }
+
+    lastServerOnline = true;
+
+  } catch (err) {
+    // 🔄 ONLINE → OFFLINE
+    if (lastServerOnline) {
+      console.log('🔴 Server appena andato OFFLINE');
+
+      try {
+        const channel = await client.channels.fetch(STATUS_CHANNEL_ID);
+
+        await channel.send({
+          embeds: [
+            {
+              color: 0xED4245,
+              title: '🔴 Server OFFLINE',
+              description: 'Il server Minecraft non è più raggiungibile.',
+              fields: [
+                { name: 'IP', value: SERVER_IP, inline: true },
+                { name: 'Porta', value: String(SERVER_PORT), inline: true },
+                { name: 'Tipo', value: SERVER_TYPE.toUpperCase(), inline: true }
+              ],
+              timestamp: new Date()
+            }
+          ]
+        });
+      } catch (sendErr) {
+        console.error('Errore invio messaggio OFFLINE:', sendErr);
+      }
+    }
+
+    lastServerOnline = false;
+  }
+}
+
+
 client.on('messageCreate', async (message) => {
   try {
     if (message.author.bot) return;
@@ -75,3 +153,9 @@ client.on('messageCreate', async (message) => {
 });
 
 console.log('🟢 Server Status Plugin attivo');
+
+// Controllo automatico ogni 60 secondi
+setInterval(checkServerStatus, 60 * 1000);
+
+console.log('⏱️ Monitor automatico stato server avviato');
+
