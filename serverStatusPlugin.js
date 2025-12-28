@@ -1,138 +1,131 @@
 console.log('🟢 Server Status Plugin caricato');
 
 const { client } = require('./bot');
-const { status } = require('minecraft-server-util'); // unica funzione ora
+const { status } = require('minecraft-server-util'); // endpoint universale
 
-// Configurazioni server
-const SERVER_IP = process.env.MC_SERVER_IP || '185.107.192.163';
-const SERVER_PORT = Number(process.env.MC_SERVER_PORT) || 25565;
-
-// Comando Discord
+// CONFIG
+const SERVER_IP = process.env.MC_SERVER_IP;
+const SERVER_PORT = Number(process.env.MC_SERVER_PORT);
+const STATUS_CHANNEL_ID = process.env.SERVER_STATUS_CHANNEL_ID;
 const COMMAND = '!server';
 
-// Stato precedente
 let lastServerOnline = false;
 
-// Canale Discord per notifiche automatiche
-const STATUS_CHANNEL_ID = process.env.SERVER_STATUS_CHANNEL_ID;
-
-// Funzione universale per ottenere lo status del server
+// Funzione per ping del server
 async function fetchServerStatus() {
   console.log('🧪 [1] fetchServerStatus() chiamata');
+  console.log('🧪 [2] HOST:', SERVER_IP);
+  console.log('🧪 [3] PORT:', SERVER_PORT);
+
   try {
-    console.log(`🧪 [2] Ping ${SERVER_IP}:${SERVER_PORT}`);
     const result = await status(SERVER_IP, { port: SERVER_PORT, timeout: 3000 });
-    console.log('✅ [3] Server raggiungibile:', result);
+    console.log('🟢 [4] Server raggiungibile:', result);
 
-    // Determina numero giocatori in base a Java/Bedrock
-    const players = result.players?.online !== undefined
-      ? `${result.players.online} / ${result.players.max}`
-      : result.playersOnline !== undefined
-        ? `${result.playersOnline} / ${result.playersMax}`
-        : 'N/A';
-
-    return { online: true, players };
+    return {
+      online: true,
+      players: result.players ? `${result.players.online} / ${result.players.max}` : 'N/A'
+    };
   } catch (err) {
     console.warn('❌ [X] Server non raggiungibile:', err.message || err);
     return { online: false };
   }
 }
 
-// Funzione per monitor automatico
+// Controllo automatico
 async function checkServerStatus() {
   console.log('⏱️ [A] checkServerStatus()');
-  const status = await fetchServerStatus();
+  const statusData = await fetchServerStatus();
 
-  try {
-    const channel = await client.channels.fetch(STATUS_CHANNEL_ID);
-    if (!channel) return console.error('⚠️ Canale Discord non trovato');
-
-    // OFFLINE → ONLINE
-    if (status.online && !lastServerOnline) {
-      console.log('🟢 Server appena andato ONLINE');
-      await channel.send({
-        embeds: [{
-          color: 0x57F287,
-          title: '🟢 Server ONLINE',
-          description: 'Il server Minecraft è ora disponibile!',
-          fields: [
-            { name: 'IP', value: SERVER_IP, inline: true },
-            { name: 'Porta', value: String(SERVER_PORT), inline: true },
-            { name: 'Giocatori', value: status.players, inline: false },
-          ],
-          timestamp: new Date()
-        }]
-      });
-    }
-
-    // ONLINE → OFFLINE
-    if (!status.online && lastServerOnline) {
-      console.log('🔴 Server appena andato OFFLINE');
-      await channel.send({
-        embeds: [{
-          color: 0xED4245,
-          title: '🔴 Server OFFLINE',
-          description: 'Il server Minecraft non è più raggiungibile.',
-          fields: [
-            { name: 'IP', value: SERVER_IP, inline: true },
-            { name: 'Porta', value: String(SERVER_PORT), inline: true },
-          ],
-          timestamp: new Date()
-        }]
-      });
-    }
-
-    lastServerOnline = status.online;
-
-  } catch (err) {
-    console.error('Errore invio messaggio Discord:', err);
+  // Fetch canale
+  if (!STATUS_CHANNEL_ID) {
+    console.error('⚠️ STATUS_CHANNEL_ID non definito nelle variabili d’ambiente');
+    return;
   }
+
+  let channel;
+  try {
+    channel = await client.channels.fetch(STATUS_CHANNEL_ID);
+    if (!channel) {
+      console.error('⚠️ Canale Discord non trovato');
+      return;
+    }
+  } catch (err) {
+    console.error('⚠️ Errore fetch canale Discord:', err);
+    return;
+  }
+
+  // ONLINE → OFFLINE o viceversa
+  if (statusData.online && !lastServerOnline) {
+    console.log('🟢 Server appena andato ONLINE');
+    await channel.send({
+      embeds: [{
+        color: 0x57F287,
+        title: '🟢 Server ONLINE',
+        description: 'Il server Minecraft è ora disponibile!',
+        fields: [
+          { name: 'IP', value: SERVER_IP, inline: true },
+          { name: 'Porta', value: String(SERVER_PORT), inline: true },
+          { name: 'Giocatori', value: statusData.players, inline: false }
+        ],
+        timestamp: new Date()
+      }]
+    });
+  } else if (!statusData.online && lastServerOnline) {
+    console.log('🔴 Server appena andato OFFLINE');
+    await channel.send({
+      embeds: [{
+        color: 0xED4245,
+        title: '🔴 Server OFFLINE',
+        description: 'Il server Minecraft non è più raggiungibile.',
+        fields: [
+          { name: 'IP', value: SERVER_IP, inline: true },
+          { name: 'Porta', value: String(SERVER_PORT), inline: true }
+        ],
+        timestamp: new Date()
+      }]
+    });
+  }
+
+  lastServerOnline = statusData.online;
 }
 
-// Listener comando Discord
+// Comando !server
 client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith(COMMAND)) return;
+
+  console.log('📡 [CMD] Richiesta stato server da', message.author.tag);
+
+  const statusData = await fetchServerStatus();
+
+  const embed = statusData.online
+    ? {
+        color: 0x57F287,
+        title: '🟢 Server ONLINE',
+        fields: [
+          { name: 'IP', value: SERVER_IP, inline: true },
+          { name: 'Porta', value: String(SERVER_PORT), inline: true },
+          { name: 'Giocatori', value: statusData.players, inline: false }
+        ],
+        timestamp: new Date()
+      }
+    : {
+        color: 0xED4245,
+        title: '🔴 Server OFFLINE',
+        description: 'Il server non è raggiungibile al momento.',
+        timestamp: new Date()
+      };
+
   try {
-    if (message.author.bot) return;
-    if (!message.content.startsWith(COMMAND)) return;
-
-    console.log('📡 Richiesta !server da', message.author.tag);
-
-    const status = await fetchServerStatus();
-
-    if (status.online) {
-      await message.reply({
-        embeds: [{
-          color: 0x57F287,
-          title: '🟢 Server ONLINE',
-          fields: [
-            { name: 'IP', value: SERVER_IP, inline: true },
-            { name: 'Porta', value: String(SERVER_PORT), inline: true },
-            { name: 'Giocatori', value: status.players, inline: false },
-          ],
-          timestamp: new Date()
-        }]
-      });
-      console.log('✅ Risposta inviata: ONLINE');
-    } else {
-      await message.reply({
-        embeds: [{
-          color: 0xED4245,
-          title: '🔴 Server OFFLINE',
-          description: 'Il server non è raggiungibile al momento.',
-          timestamp: new Date()
-        }]
-      });
-      console.log('🔴 Risposta inviata: OFFLINE');
-    }
+    await message.reply({ embeds: [embed] });
   } catch (err) {
-    console.error('Errore comando Discord !server:', err);
+    console.error('⚠️ Errore invio messaggio Discord:', err);
   }
 });
 
 console.log('🟢 Server Status Plugin attivo');
 
-// Monitor automatico ogni 10 secondi
-setInterval(checkServerStatus, 10 * 1000);
-checkServerStatus();
-
-console.log('⏱️ Monitor automatico avviato');
+// Monitor automatico ogni 60 secondi
+setInterval(checkServerStatus, 60 * 1000);
+checkServerStatus(); // prima esecuzione immediata
+console.log('⏱️ Monitor automatico stato server avviato');
