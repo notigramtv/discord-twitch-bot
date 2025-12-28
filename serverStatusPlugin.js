@@ -170,6 +170,6 @@ client.on('messageCreate', async (message) => {
 ============================ */
 
 console.log('🟢 Server Status Plugin attivo');
-setInterval(checkServerStatus, 10 * 1000);
+setInterval(checkServerStatus, 600 * 1000);
 checkServerStatus();
 console.log('⏱️ Monitor automatico avviato');
