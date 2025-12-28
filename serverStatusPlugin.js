@@ -61,8 +61,6 @@ async function checkServerStatus() {
   }
 }
 
-
-
 client.on('messageCreate', async (message) => {
   try {
     if (message.author.bot) return;
