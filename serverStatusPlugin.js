@@ -16,7 +16,7 @@ let lastServerOnline = false;
  * Ping server tramite mcstatus.io (AFFIDABILE CON ATERNOS)
  */
 async function fetchServerStatus() {
-  const url = `https://api.mcstatus.io/v2/status/java/${SERVER_HOST}`;
+  const url = `https://api.mcstatus.io/v2/status/${SERVER_HOST}`;
 
   const res = await fetch(url, { timeout: 5000 });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -28,7 +28,9 @@ async function fetchServerStatus() {
     playersOnline: data.players.online,
     playersMax: data.players.max,
     version: data.version.name_clean,
-    motd: data.motd.clean
+    motd: data.motd.clean,
+    ip: data.host,
+    port: data.port
   };
 }
 
