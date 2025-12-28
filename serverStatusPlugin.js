@@ -63,8 +63,6 @@ async function checkServerStatus() {
         title: '🟢 Server ONLINE',
         description: 'Il server Minecraft è ora disponibile!',
         fields: [
-          { name: 'IP', value: SERVER_IP, inline: true },
-          { name: 'Porta', value: String(SERVER_PORT), inline: true },
           { name: 'Giocatori', value: statusData.players, inline: false }
         ],
         timestamp: new Date()
@@ -77,10 +75,6 @@ async function checkServerStatus() {
         color: 0xED4245,
         title: '🔴 Server OFFLINE',
         description: 'Il server Minecraft non è più raggiungibile.',
-        fields: [
-          { name: 'IP', value: SERVER_IP, inline: true },
-          { name: 'Porta', value: String(SERVER_PORT), inline: true }
-        ],
         timestamp: new Date()
       }]
     });
@@ -103,8 +97,6 @@ client.on('messageCreate', async (message) => {
         color: 0x57F287,
         title: '🟢 Server ONLINE',
         fields: [
-          { name: 'IP', value: SERVER_IP, inline: true },
-          { name: 'Porta', value: String(SERVER_PORT), inline: true },
           { name: 'Giocatori', value: statusData.players, inline: false }
         ],
         timestamp: new Date()
