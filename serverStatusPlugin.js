@@ -138,7 +138,7 @@ client.on('messageCreate', async (message) => {
 console.log('🟢 Server Status Plugin attivo');
 
 // Monitor automatico ogni 10 secondi (modifica se vuoi)
-setInterval(checkServerStatus, 10 * 1000);
+setInterval(checkServerStatus, 600 * 1000);
 checkServerStatus();
 
 console.log('⏱️ Monitor automatico avviato');
