@@ -1,19 +1,43 @@
 console.log('🟢 Server Status Plugin caricato');
 
 const { client } = require('./bot');
-const { statusJava } = require('minecraft-server-util');
 
-const SERVER_IP = process.env.MC_SERVER_IP;
-const SERVER_PORT = Number(process.env.MC_SERVER_PORT);
+const fetch = (...args) =>
+  import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-const COMMAND = '!server'; // puoi cambiarlo quando vuoi
+// CONFIG
+const SERVER_HOST = process.env.MC_SERVER_HOST; // es: play.notigram.aternos.me
+const STATUS_CHANNEL_ID = process.env.SERVER_STATUS_CHANNEL_ID;
+const COMMAND = '!server';
 
 let lastServerOnline = false;
-const STATUS_CHANNEL_ID = process.env.SERVER_STATUS_CHANNEL_ID;
 
+/**
+ * Ping server tramite mcstatus.io (AFFIDABILE CON ATERNOS)
+ */
+async function fetchServerStatus() {
+  const url = `https://api.mcstatus.io/v2/status/java/${SERVER_HOST}`;
+
+  const res = await fetch(url, { timeout: 5000 });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+  const data = await res.json();
+  if (!data.online) throw new Error('Server offline');
+
+  return {
+    playersOnline: data.players.online,
+    playersMax: data.players.max,
+    version: data.version.name_clean,
+    motd: data.motd.clean
+  };
+}
+
+/**
+ * MONITOR AUTOMATICO
+ */
 async function checkServerStatus() {
   try {
-    const result = await statusJava(SERVER_IP, undefined, { timeout: 3000 });
+    const result = await fetchServerStatus();
 
     if (!lastServerOnline) {
       console.log('🟢 Server appena andato ONLINE');
@@ -26,13 +50,13 @@ async function checkServerStatus() {
           title: '🟢 Server ONLINE',
           description: 'Il server Minecraft è ora **disponibile**.',
           fields: [
-            { name: 'IP', value: SERVER_IP, inline: true },
-            { name: 'Porta', value: String(SERVER_PORT), inline: true },
+            { name: 'Indirizzo', value: SERVER_HOST, inline: true },
             {
               name: 'Giocatori',
-              value: `${result.players.online} / ${result.players.max}`,
-              inline: false
-            }
+              value: `${result.playersOnline} / ${result.playersMax}`,
+              inline: true
+            },
+            { name: 'Versione', value: result.version, inline: false }
           ],
           timestamp: new Date()
         }]
@@ -41,7 +65,7 @@ async function checkServerStatus() {
 
     lastServerOnline = true;
 
-  } catch {
+  } catch (err) {
     if (lastServerOnline) {
       console.log('🔴 Server appena andato OFFLINE');
 
@@ -61,27 +85,30 @@ async function checkServerStatus() {
   }
 }
 
+/**
+ * COMANDO !server
+ */
 client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith(COMMAND)) return;
+
+  console.log('📡 Richiesta stato server da', message.author.tag);
+
   try {
-    if (message.author.bot) return;
-    if (!message.content.startsWith(COMMAND)) return;
-
-    console.log('📡 Richiesta stato server da', message.author.tag);
-
-    const result = await statusJava(SERVER_IP, undefined, { timeout: 3000 });
+    const result = await fetchServerStatus();
 
     await message.reply({
       embeds: [{
         color: 0x57F287,
         title: '🟢 Server ONLINE',
         fields: [
-          { name: 'IP', value: SERVER_IP, inline: true },
-          { name: 'Porta', value: String(SERVER_PORT), inline: true },
+          { name: 'Indirizzo', value: SERVER_HOST, inline: true },
           {
             name: 'Giocatori',
-            value: `${result.players.online} / ${result.players.max}`,
-            inline: false
-          }
+            value: `${result.playersOnline} / ${result.playersMax}`,
+            inline: true
+          },
+          { name: 'Versione', value: result.version, inline: false }
         ],
         timestamp: new Date()
       }]
@@ -99,12 +126,10 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-
 console.log('🟢 Server Status Plugin attivo');
 
-// Controllo automatico ogni 60 secondi
+// MONITOR AUTOMATICO (10s per test)
 setInterval(checkServerStatus, 10 * 1000);
 checkServerStatus();
 
 console.log('⏱️ Monitor automatico stato server avviato');
-
