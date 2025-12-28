@@ -13,7 +13,7 @@ const STATUS_CHANNEL_ID = process.env.SERVER_STATUS_CHANNEL_ID;
 
 async function checkServerStatus() {
   try {
-    const result = await statusJava(SERVER_IP, SERVER_PORT, { timeout: 3000 });
+    const result = await statusJava(SERVER_IP, undefined, { timeout: 3000 });
 
     if (!lastServerOnline) {
       console.log('🟢 Server appena andato ONLINE');
@@ -68,7 +68,7 @@ client.on('messageCreate', async (message) => {
 
     console.log('📡 Richiesta stato server da', message.author.tag);
 
-    const result = await statusJava(SERVER_IP, SERVER_PORT, { timeout: 3000 });
+    const result = await statusJava(SERVER_IP, undefined, { timeout: 3000 });
 
     await message.reply({
       embeds: [{
