@@ -27,7 +27,7 @@ async function getMinecraftUUID(username, type) {
     const data = await res.json();
 
     if (lowerType === 'java') return data?.uuid || null;
-    if (lowerType === 'bedrock') return data?.floodgateuuid || null;
+    if (lowerType === 'bedrock') return data?.floodgateuid || null;
 
     return null;
   } catch (err) {
