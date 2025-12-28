@@ -1,12 +1,11 @@
 console.log('🟢 Server Status Plugin caricato');
 
 const { client } = require('./bot');
-const { statusJava, statusBedrock } = require('minecraft-server-util');
+const { status } = require('minecraft-server-util'); // unica funzione ora
 
 // Configurazioni server
 const SERVER_IP = process.env.MC_SERVER_IP || '185.107.192.163';
 const SERVER_PORT = Number(process.env.MC_SERVER_PORT) || 25565;
-const SERVER_TYPE = process.env.MC_SERVER_TYPE?.toLowerCase() || 'java'; // java o bedrock
 
 // Comando Discord
 const COMMAND = '!server';
@@ -21,23 +20,18 @@ const STATUS_CHANNEL_ID = process.env.SERVER_STATUS_CHANNEL_ID;
 async function fetchServerStatus() {
   console.log('🧪 [1] fetchServerStatus() chiamata');
   try {
-    let result;
-    if (SERVER_TYPE === 'java') {
-      console.log(`🧪 [2] Ping Java ${SERVER_IP}:${SERVER_PORT}`);
-      result = await statusJava(SERVER_IP, SERVER_PORT, { timeout: 3000 });
-    } else {
-      console.log(`🧪 [2] Ping Bedrock ${SERVER_IP}:${SERVER_PORT}`);
-      result = await statusBedrock(SERVER_IP, SERVER_PORT, { timeout: 3000 });
-    }
+    console.log(`🧪 [2] Ping ${SERVER_IP}:${SERVER_PORT}`);
+    const result = await status(SERVER_IP, { port: SERVER_PORT, timeout: 3000 });
     console.log('✅ [3] Server raggiungibile:', result);
 
-    return {
-      online: true,
-      players: SERVER_TYPE === 'java' 
-        ? `${result.players.online} / ${result.players.max}` 
-        : `${result.playersOnline} / ${result.playersMax}`,
-      motd: result.motd.clean || '',
-    };
+    // Determina numero giocatori in base a Java/Bedrock
+    const players = result.players?.online !== undefined
+      ? `${result.players.online} / ${result.players.max}`
+      : result.playersOnline !== undefined
+        ? `${result.playersOnline} / ${result.playersMax}`
+        : 'N/A';
+
+    return { online: true, players };
   } catch (err) {
     console.warn('❌ [X] Server non raggiungibile:', err.message || err);
     return { online: false };
@@ -137,8 +131,8 @@ client.on('messageCreate', async (message) => {
 
 console.log('🟢 Server Status Plugin attivo');
 
-// Monitor automatico ogni 10 secondi (modifica se vuoi)
-setInterval(checkServerStatus, 600 * 1000);
+// Monitor automatico ogni 10 secondi
+setInterval(checkServerStatus, 10 * 1000);
 checkServerStatus();
 
 console.log('⏱️ Monitor automatico avviato');
