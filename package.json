@@ -17,6 +17,7 @@
     "discord.js": "^14.25.1",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "minecraft-server-util": "^5.4.4",
     "node-cron": "^4.2.1",
     "node-fetch": "^3.3.2"
   }

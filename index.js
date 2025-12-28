@@ -2,3 +2,4 @@
 require('./bot');
 require('./oauth_server');
 require('./minecraftWhitelistPlugin');
+require('./serverStatusPlugin');
