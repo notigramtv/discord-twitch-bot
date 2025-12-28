@@ -51,7 +51,7 @@ async function checkServerStatus() {
         embeds: [{
           color: 0xED4245,
           title: '🔴 Server OFFLINE',
-          description: 'Il server Minecraft non è più raggiungibile.',
+          description: 'Il NotiCraft non è acceso al momento.',
           timestamp: new Date()
         }]
       });
