@@ -76,14 +76,13 @@ client.on('messageCreate', async (message) => {
     // Scrive nel canale output
     const outputChannel = await client.channels.fetch(OUTPUT_CHANNEL_ID);
     const embed = new EmbedBuilder()
-  .setTitle('🎮 Minecraft Whitelist')
+  .setTitle('🎮 Nuovo Utente Server Minecraft')
   .setColor(tipo.toLowerCase() === 'java' ? 0x3BA55D : 0x5865F2)
   .addFields(
-    { name: '🧱 Minecraft', value: minecraftName, inline: true },
-    { name: '🆔 UUID', value: `\`${uuid}\``, inline: false },
-    { name: '📦 Tipo', value: tipo, inline: true }
+    { name: 'Minecraft', value: minecraftName, inline: true },
+    { name: 'UUID', value: `\`${uuid}\``, inline: false },
+    { name: 'Tipo', value: tipo, inline: true }
   )
-  .setFooter({ text: 'NotiGram • Whitelist automatica' })
   .setTimestamp();
 
 await outputChannel.send({ embeds: [embed] });
