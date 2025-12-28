@@ -1,4 +1,5 @@
 console.log('✅ Minecraft Whitelist Plugin caricato');
+const { EmbedBuilder } = require('discord.js');
 
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const { client } = require('./bot');
@@ -74,9 +75,21 @@ client.on('messageCreate', async (message) => {
 
     // Scrive nel canale output
     const outputChannel = await client.channels.fetch(OUTPUT_CHANNEL_ID);
-    await outputChannel.send(
+    const embed = new EmbedBuilder()
+  .setTitle('🎮 Minecraft Whitelist')
+  .setColor(tipo.toLowerCase() === 'java' ? 0x3BA55D : 0x5865F2)
+  .addFields(
+    { name: '🧱 Minecraft', value: minecraftName, inline: true },
+    { name: '🆔 UUID', value: `\`${uuid}\``, inline: false },
+    { name: '📦 Tipo', value: tipo, inline: true }
+  )
+  .setFooter({ text: 'NotiGram • Whitelist automatica' })
+  .setTimestamp();
+
+await outputChannel.send({ embeds: [embed] });
+    /*await outputChannel.send(
       `Minecraft: ${minecraftName}\nUUID: ${uuid}\nTipo: ${tipo}`
-    );
+    );*/
 
     console.log(`📤 UUID inviato per ${minecraftName}: ${uuid}`);
   } catch (err) {
