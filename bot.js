@@ -166,22 +166,38 @@ if (!logChannel) {
 
     try {
       if (!token) {
-        await member.roles.remove(role);
-        console.log(`❌ Token mancante → ruolo rimosso a ${member.user.tag}`);
+        console.log(`⚠️ [SKIP] Token mancante → impossibile verificare ${member.user.tag}`);
 
         if (logChannel) {
-  await logChannel.send(
-    `❌ **Ruolo Minecrafter rimosso**\n` +
-    `👤 Utente: **${member.user.tag}**\n` +
-    `📺 Motivo: non segue più il canale Twitch **notigram**\n` +
-    `-------------------------`
-  );
+          await logChannel.send(
+          `⚠️ **CONTROLLO FOLLOWER**\n` +
+          `👤 Utente: **${member.user.tag}**\n` +
+          `🔒 Motivo: token OAuth Twitch mancante o scaduto\n` +
+          `🛡️ Azione: ruolo mantenuto`
+        );
+  }
+
+  continue;
 }
+
+
+      const twitchUserId = await getTwitchUserId(token);
+      
+      if (!twitchUserId) {
+        console.log(`⚠️ [SKIP] Twitch user ID non trovato → ${member.user.tag}`);
+
+        if (logChannel) {
+          await logChannel.send(
+            `⚠️ **Controllo follower NON eseguito**\n` +
+            `👤 Utente: **${member.user.tag}**\n` +
+            `🔒 Motivo: impossibile ottenere Twitch User ID\n` +
+            `🛡️ Azione: ruolo mantenuto`
+          );
+        }
 
         continue;
       }
 
-      const twitchUserId = await getTwitchUserId(token);
       //NUOVE VARIABILI
       const appToken = await getAppAccessToken();
       const follower = await isFollower(twitchUserId, broadcasterId, appToken);
@@ -191,24 +207,35 @@ if (!logChannel) {
       //const follower = await isFollower(twitchUserId);
     //-----
 
-      if (!follower) {
+    if (!follower) {
         await member.roles.remove(role);
-        console.log(`❌ Non più follower → ruolo rimosso a ${member.user.tag}`);
 
-        // DM opzionale
-        try {
-          await member.send(
-            '⚠️ Non segui più il canale Twitch **notigram**.\n' +
-            'Il ruolo **Minecrafter** ti è stato rimosso.\n' +
-            'Segui di nuovo il canale e usa **!follower**.'
+        console.log(`❌ [REMOVE] ${member.user.tag} NON segue più il canale`);
+
+        if (logChannel) {
+          await logChannel.send(
+            `❌ **Ruolo Minecrafter rimosso**\n` +
+            `👤 Utente: **${member.user.tag}**\n` +
+            `📺 Motivo: non segue più il canale Twitch **notigram**\n` +
+            `🔍 Verifica: confermata da Twitch API`
           );
-        } catch {}
+        }
       } else {
-        console.log(`✅ ${member.user.tag} è ancora follower`);
-      }
+        console.log(`✅ [OK] ${member.user.tag} è ancora follower`);
+        }
+
     } catch (err) {
-      console.error(`Errore controllo ${member.user.tag}`, err);
-    }
+        console.error(`❌ [ERROR] Controllo fallito per ${member.user.tag}`, err);
+
+        if (logChannel) {
+          await logChannel.send(
+            `⚠️ **Errore tecnico durante il controllo follower**\n` +
+            `👤 Utente: **${member.user.tag}**\n` +
+            `🛠️ Azione: nessuna modifica al ruolo\n` +
+            `📄 Dettaglio: ${err.message}`
+          );
+        }
+      }
   }
 
   console.log('✅ Controllo mensile completato');
